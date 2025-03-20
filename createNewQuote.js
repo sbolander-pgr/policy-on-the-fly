@@ -25,19 +25,16 @@ async function handleStartNewQuoteModal(page) {
   await page.click("#modalCreate .btn-primary");
 }
 
-async function createNewQuote(browser) {
-  const page = await browser.newPage();
-  await page.goto(process.env.BASE_URL);
+async function createNewQuote(page) {
   await handleStartNewQuoteModal(page);
   await handleCustomerPage(page);
   await handleBusinessDetailsPage(page);
   await handlePropertyDetailsPage(page);
   await handleCoveragePage(page);
-  await handleSummaryPage(page);
+  await handleSummaryPage(page, true);
   await handleFinalDetailsPage(page);
   await handlePurchasePage(page);
   const policyId = await handleSoldQuotePage(page);
-  await page.close();
   return policyId;
 }
 

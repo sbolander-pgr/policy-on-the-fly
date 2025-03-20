@@ -1,43 +1,9 @@
-/* ==========================
-   HELPER METHODS
-   ========================== */
-async function sleep(milliseconds) {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds));
-}
-
-async function nextPage(page, selector) {
-  await sleep(1000);
-  const nextBtnSelector = `button[data-pgr-id="QuoteFooterPartialPage-Next-${selector}"]`;
-  await page.waitForSelector(`${nextBtnSelector}:not([disabled])`, {
-    visible: true,
-  });
-  await page.click(nextBtnSelector);
-  await sleep(1000);
-}
-
-async function clickRadio(page, selector, sleepTime = 500) {
-  await sleep(sleepTime);
-  await page.waitForSelector(selector, { visible: true });
-  await page.click(selector);
-  await sleep(sleepTime);
-}
-
-async function clearInput(page, selector) {
-  await page.click(selector, { clickCount: 3 });
-  await page.keyboard.press("Backspace");
-  await page.keyboard.press("Backspace");
-  await page.keyboard.press("Backspace");
-  await page.keyboard.press("Backspace");
-  await page.keyboard.press("Backspace");
-  await page.keyboard.press("Backspace");
-  await page.keyboard.press("Backspace");
-  await page.keyboard.press("Backspace");
-  await sleep(1000);
-}
+const { sleep, nextPage, clickRadio, clearInput } = require("./bopUtility");
 
 /* ==========================
-   QUOTE METHODS
+   QUOTE FLOW METHODS
    ========================== */
+
 async function handleCustomerPage(page) {
   await page.waitForSelector("#pgCustomer", { visible: true });
 
@@ -199,8 +165,13 @@ async function handleCoveragePage(page) {
   await nextPage(page, "SUMMARY");
 }
 
-async function handleSummaryPage(page) {
+async function handleSummaryPage(page, plIndicatorAdd = false) {
   await page.waitForSelector("#pgSummary", { visible: true });
+  if (plIndicatorAdd) {
+    const plIndicatorSelector = "#uwSetRenewalRecoveryEventFlag";
+    await page.waitForSelector(plIndicatorSelector, { visible: true });
+    await page.click(plIndicatorSelector);
+  }
   await nextPage(page, "FINAL DETAILS");
 }
 
@@ -227,11 +198,17 @@ async function handlePurchasePage(page) {
   await page.waitForSelector("#pgPurchase", { visible: true });
 
   // Initial Payment
-  const initialPaymentSelector = "select#PurchasePartialPage-PaymentSelector";
+  const nameOnCardSelector = "#nameOnCard";
+  await page.type(nameOnCardSelector, "RENEWAL RECOVERY");
 
-  await page.waitForSelector(initialPaymentSelector, { visible: true });
+  const cardNumberSelector = "#cardNumber";
+  await page.type(cardNumberSelector, "4111111111111111");
 
-  await page.select(initialPaymentSelector, "payByCash");
+  const cardExpSelector = "#cardExpirationDate";
+  await page.type(cardExpSelector, "12/30");
+
+  const cardZipSelector = "#cardholderZipCode";
+  await page.type(cardZipSelector, "44094");
 
   await nextPage(page, "COMPLETE");
 }
@@ -249,7 +226,6 @@ async function handleSoldQuotePage(page) {
 }
 
 module.exports = {
-  sleep,
   handleCustomerPage,
   handleBusinessDetailsPage,
   handlePropertyDetailsPage,
@@ -257,5 +233,5 @@ module.exports = {
   handleSummaryPage,
   handleFinalDetailsPage,
   handlePurchasePage,
-  handleSoldQuotePage,
+  handleSoldQuotePage
 };
