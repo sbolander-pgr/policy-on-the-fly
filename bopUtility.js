@@ -38,6 +38,24 @@ async function clearInput(page, selector) {
 /* ==========================
     BOP UTILITY METHODS
     ========================== */
+async function login(page) {
+  if (!page.url().includes("/Account/Login")) {
+    await page.goto(`${process.env.BASE_URL}/Account/Login`);
+  }
+  await Promise.all([
+    page.waitForSelector("#UserName"),
+    page.waitForSelector("#Password"),
+    page.waitForSelector("#login-button"),
+  ]);
+
+  await page.type("#UserName", process.env.APP_USERNAME);
+  await page.type("#Password", process.env.APP_PASSWORD);
+
+  await page.click("#login-button");
+  await page.waitForNavigation();
+
+  return page;
+}
 
 async function handleSearchExistingQuote(page, quoteId) {
   await page.waitForSelector("#btnOptionsMenu", { visible: true });
@@ -80,11 +98,11 @@ async function setUtilityDate(page, date) {
 async function tryGetQuoteId(page) {
   try {
     const quoteIdSelector = 'dd[data-bind="text: PolicyId"]';
-  
+
     await page.waitForSelector(quoteIdSelector);
-  
+
     const quoteId = await page.$eval(quoteIdSelector, (el) => el.innerText);
-  
+
     return quoteId;
   } catch (error) {
     console.error("Error getting quoteId");
@@ -92,13 +110,13 @@ async function tryGetQuoteId(page) {
   }
 }
 
-
 module.exports = {
   sleep,
   nextPage,
   clickRadio,
   clearInput,
+  login,
   handleSearchExistingQuote,
   setUtilityDate,
-  tryGetQuoteId
+  tryGetQuoteId,
 };
