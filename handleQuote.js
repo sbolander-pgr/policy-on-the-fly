@@ -1,6 +1,40 @@
 const { sleep, nextPage, clickRadio, clearInput } = require("./bopUtility");
 
 /* ==========================
+   CONSTANTS
+   ========================== */
+
+const answers = {
+  customerPage: {
+    businessName: "RENEWAL RECOVERY TEST",
+    mailingAddress: "4061 ERIE ST",
+    mailingAddressCity: "WILLOUGHBY",
+    mailingAddressState: "OH",
+    mailingAddressZip: "44094",
+    
+    firstName: "RENEWAL",
+    lastName: "RECOVERY",
+    dob: "01/01/1980",
+    phone: "444-444-4444",
+    email: "test@e-ins.net"
+  },
+  businessDetailsPage: {
+    yearCreated: "2018",
+    annualSales: "150000",
+    numEmployees: "0"
+  },
+  finalDetailsPage: {
+    producerName: "BOPAgent"
+  },
+  purchasePage: {
+    nameOnCard: "RENEWAL RECOVERY",
+    cardNumber: "4111111111111111",
+    cardExpirationDate: "12/30",
+    cardholderZipCode: "44094"
+  }
+};
+
+/* ==========================
    QUOTE FLOW METHODS
    ========================== */
 
@@ -26,17 +60,17 @@ async function handleCustomerPage(page) {
 
   await page.select(entityTypeSelector, "1");
   await clearInput(page, businessNameSelector).then(async () => {
-    await page.type(businessNameSelector, "RENEWAL RECOVERY TEST");
+    await page.type(businessNameSelector, answers.customerPage.businessName);
   });
   await clearInput(page, mailingAddressSelector).then(async () => {
-    await page.type(mailingAddressSelector, "4061 ERIE ST");
+    await page.type(mailingAddressSelector, answers.customerPage.mailingAddress);
   });
   await clearInput(page, mailingAddressCitySelector).then(async () => {
-    await page.type(mailingAddressCitySelector, "WILLOUGHBY");
+    await page.type(mailingAddressCitySelector, answers.customerPage.mailingAddressCity);
   });
-  await page.select(mailingAddressStateSelector, "OH");
+  await page.select(mailingAddressStateSelector, answers.customerPage.mailingAddressState);
   await clearInput(page, mailingAddressZipSelector).then(async () => {
-    await page.type(mailingAddressZipSelector, "44094");
+    await page.type(mailingAddressZipSelector, answers.customerPage.mailingAddressZip);
   });
 
   await sleep(1000).then(async () => {
@@ -59,19 +93,20 @@ async function handleCustomerPage(page) {
     page.waitForSelector(emailSelector, { visible: true }),
   ]);
 
-  await clearInput(page, firstNameSelector);
-  await page.type(firstNameSelector, "RENEWAL");
+  await clearInput(page, firstNameSelector).then(async () => {
+    await page.type(firstNameSelector, answers.customerPage.firstName);
+  });
   await clearInput(page, lastNameSelector).then(async () => {
-    await page.type(lastNameSelector, "RECOVERY");
+    await page.type(lastNameSelector, answers.customerPage.lastName);
   });
   await clearInput(page, dobSelector).then(async () => {
-    await page.type(dobSelector, "01/01/1980");
+    await page.type(dobSelector, answers.customerPage.dob);
   });
   await clearInput(page, phoneSelector).then(async () => {
-    await page.type(phoneSelector, "444-444-4444");
+    await page.type(phoneSelector, answers.customerPage.phone);
   });
   await clearInput(page, emailSelector).then(async () => {
-    await page.type(emailSelector, "test@e-ins.net");
+    await page.type(emailSelector, answers.customerPage.email);
   });
 
   await clickRadio(page, homeAddressChoiceSelector);
@@ -114,13 +149,13 @@ async function handleBusinessDetailsPage(page) {
   ]);
 
   await clearInput(page, yearCreatedSelector).then(async () => {
-    await page.type(yearCreatedSelector, "2018");
+    await page.type(yearCreatedSelector, answers.businessDetailsPage.yearCreated);
   });
   await clearInput(page, annualSalesSelector).then(async () => {
-    await page.type(annualSalesSelector, "150000");
+    await page.type(annualSalesSelector, answers.businessDetailsPage.annualSales);
   });
   await clearInput(page, numEmployeesSelector).then(async () => {
-    await page.type(numEmployeesSelector, "0");
+    await page.type(numEmployeesSelector, answers.businessDetailsPage.numEmployees);
   });
 
   // Business Overview Radio
@@ -184,7 +219,7 @@ async function handleFinalDetailsPage(page) {
 
   await page.waitForSelector(producerNameSelector, { visible: true });
 
-  await page.select(producerNameSelector, "BOPAgent");
+  await page.select(producerNameSelector, answers.finalDetailsPage.producerName);
 
   // Customer Section
   const customerContactSelector = "#rdoAllowContactNo";
@@ -199,16 +234,22 @@ async function handlePurchasePage(page) {
 
   // Initial Payment
   const nameOnCardSelector = "#nameOnCard";
-  await page.type(nameOnCardSelector, "RENEWAL RECOVERY");
-
   const cardNumberSelector = "#cardNumber";
-  await page.type(cardNumberSelector, "4111111111111111");
-
   const cardExpSelector = "#cardExpirationDate";
-  await page.type(cardExpSelector, "12/30");
-
   const cardZipSelector = "#cardholderZipCode";
-  await page.type(cardZipSelector, "44094");
+
+  await clearInput(page, nameOnCardSelector).then(async () => {
+    await page.type(nameOnCardSelector, answers.purchasePage.nameOnCard);
+  });
+  await clearInput(page, cardNumberSelector).then(async () => {
+    await page.type(cardNumberSelector, answers.purchasePage.cardNumber);
+  });
+  await clearInput(page, cardExpSelector).then(async () => {
+    await page.type(cardExpSelector, answers.purchasePage.cardExpirationDate);
+  });
+  await clearInput(page, cardZipSelector).then(async () => {
+    await page.type(cardZipSelector, answers.purchasePage.cardholderZipCode);
+  });
 
   await nextPage(page, "COMPLETE");
 }

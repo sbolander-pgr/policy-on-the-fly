@@ -4,7 +4,8 @@ const { login, setUtilityDate, tryGetQuoteId } = require("./bopUtility");
 
 const { createNewQuote } = require("./createNewQuote");
 const { purchaseExistingQuote } = require("./purchaseExistingQuote");
-const { addPlIndicator } = require("./plIndicatorAdd");
+// const { addPlIndicator } = require("./plIndicatorAdd");
+const { writeOutput } = require("./filesystemUtility");
 
 /* ==========================
    STARTUP METHODS
@@ -30,8 +31,9 @@ async function startup() {
 
 async function processExistingQuotes(page, quoteIds, maxErrors = 3) {
   console.log(`Purchasing policies for ${quoteIds.length} existing quotes...`);
-  
+
   const policies = [];
+  const erroredQuotes = [];
   let consecutiveErrorCount = 0;
 
   for (const quoteId of quoteIds) {
@@ -43,15 +45,18 @@ async function processExistingQuotes(page, quoteIds, maxErrors = 3) {
     try {
       const policyId = await purchaseExistingQuote(page, quoteId);
       console.log(`Purchased policy for quote: ${quoteId}`);
-      policies.push(`"${policyId}"`);
+      policies.push(policyId);
       consecutiveErrorCount = 0;
     } catch (error) {
+      erroredQuotes.push(quoteId);
       consecutiveErrorCount++;
       console.error(`Error purchasing quote ${quoteId}: ${error.message}`);
     }
   }
 
-  return policies;
+  writeOutput('output/policies.json', policies);
+
+  return { erroredQuotes, reprocessedPolicies: policies };
 }
 
 async function processNewQuotes(page, totalPolicies = 1, maxErrors = 3) {
@@ -61,7 +66,7 @@ async function processNewQuotes(page, totalPolicies = 1, maxErrors = 3) {
   const policies = [];
   let consecutiveErrorCount = 0;
 
-  while ((policies.length + quotes.length) < totalPolicies) {
+  while (policies.length + quotes.length < totalPolicies) {
     if (consecutiveErrorCount > maxErrors) {
       console.error("Too many consecutive errors. Exiting...");
       break;
@@ -70,15 +75,17 @@ async function processNewQuotes(page, totalPolicies = 1, maxErrors = 3) {
     try {
       const policy = await createNewQuote(page);
       console.log(`Created policy: ${policy}`);
-      policies.push(`"${policy}"`);
+      policies.push(policy);
       consecutiveErrorCount = 0;
     } catch (error) {
       consecutiveErrorCount++;
       const unfinishedQuote = await tryGetQuoteId(page);
       console.log(`Error creating quote. Unfinished quote: ${unfinishedQuote}`);
-      quotes.push(`"${unfinishedQuote}"`);
+      if (unfinishedQuote?.startsWith("Q")) quotes.push(unfinishedQuote);
     }
   }
+
+  writeOutput('output/policies.json', policies);
 
   return { quotes, policies };
 }
@@ -87,14 +94,15 @@ async function processNewQuotes(page, totalPolicies = 1, maxErrors = 3) {
   const { browser, page } = await startup();
 
   const { quotes, policies } = await processNewQuotes(page, 51);
-  const reprocessedPolicies = await processExistingQuotes(page, quotes);
+  const { erroredQuotes, reprocessedPolicies } = await processExistingQuotes(
+    page,
+    quotes
+  );
   policies.push(...reprocessedPolicies);
 
-  console.log("----------------------------------");
+  console.log("\n----------------------------------");
   console.log(`RESULTS: ${policies.length} policies created.`);
-  console.log(policies.join(','));
-  console.log("----------------------------------");
-  console.log(quotes.filter(q => q.startsWith('Q')).join(','));
+  console.log(`Errored quotes: [${erroredQuotes.join(",")}]`);
 
   await browser.close();
 })();
