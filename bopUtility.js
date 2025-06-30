@@ -58,6 +58,7 @@ async function login(page) {
 }
 
 async function handleSearchExistingQuote(page, quoteId) {
+  await sleep(1000);
   await page.waitForSelector("#btnOptionsMenu", { visible: true });
   await page.click("#btnOptionsMenu");
 
@@ -80,6 +81,7 @@ async function handleSearchExistingQuote(page, quoteId) {
 }
 
 async function setUtilityDate(page, date) {
+  await sleep(200);
   const dateSpanSelector =
     'span[data-bind="text: SystemDateText, click:  $root.gotoUtilitySystemDatesPage"]';
   await page.waitForSelector(dateSpanSelector, { visible: true });

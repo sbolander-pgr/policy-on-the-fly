@@ -10,9 +10,7 @@ const {
   handleSoldQuotePage,
 } = require("./handleQuote");
 
-async function purchaseExistingQuote(browser, quoteId) {
-  const page = await browser.newPage();
-  await page.goto(process.env.BASE_URL);
+async function purchaseExistingQuote(page, quoteId) {
   await handleSearchExistingQuote(page, quoteId);
   await handleCustomerPage(page);
   await handleBusinessDetailsPage(page);

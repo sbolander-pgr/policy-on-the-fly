@@ -1,26 +1,28 @@
 const puppeteer = require("puppeteer");
-require("dotenv").config();
+require("dotenv").config({ path: "./env/.env.QA" });
 const { login, setUtilityDate, tryGetQuoteId } = require("./bopUtility");
 
 const { createNewQuote } = require("./createNewQuote");
 const { purchaseExistingQuote } = require("./purchaseExistingQuote");
-// const { addPlIndicator } = require("./plIndicatorAdd");
-const { writeOutput } = require("./filesystemUtility");
+const { writeOutput, defaultOutputFilePath, readInput, defaultInputFilePath } = require("./filesystemUtility");
+const { loadAnswers } = require("./answersLoader");
 
 /* ==========================
    STARTUP METHODS
    ========================== */
 
-async function startup() {
+async function startup(systemOverrideDate = null) {
   const browser = await puppeteer.launch({
-    headless: false,
+    headless: true,
     defaultViewport: null,
     args: ["--start-maximized"],
   });
 
   const page = await browser.newPage();
   await login(page);
-  await setUtilityDate(page, "05/04/2024");
+  if (systemOverrideDate) {
+    await setUtilityDate(page, systemOverrideDate);
+  }
 
   return { browser, page };
 }
@@ -54,7 +56,7 @@ async function processExistingQuotes(page, quoteIds, maxErrors = 3) {
     }
   }
 
-  writeOutput('output/policies.json', policies);
+  writeOutput(defaultOutputFilePath(), policies);
 
   return { erroredQuotes, reprocessedPolicies: policies };
 }
@@ -91,13 +93,12 @@ async function processNewQuotes(page, totalPolicies = 1, maxErrors = 3) {
 }
 
 (async function main() {
-  const { browser, page } = await startup();
+  const { env, newQuoteCount, systemOverrideDate, answers } = readInput(defaultInputFilePath);
+  const { browser, page } = await startup(systemOverrideDate);
+  loadAnswers(answers);
 
-  const { quotes, policies } = await processNewQuotes(page, 51);
-  const { erroredQuotes, reprocessedPolicies } = await processExistingQuotes(
-    page,
-    quotes
-  );
+  const { quotes, policies } = await processNewQuotes(page, newQuoteCount);
+  const { erroredQuotes, reprocessedPolicies } = await processExistingQuotes(page, quotes);
   policies.push(...reprocessedPolicies);
 
   console.log("\n----------------------------------");

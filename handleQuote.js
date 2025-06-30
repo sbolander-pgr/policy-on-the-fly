@@ -4,35 +4,7 @@ const { sleep, nextPage, clickRadio, clearInput } = require("./bopUtility");
    CONSTANTS
    ========================== */
 
-const answers = {
-  customerPage: {
-    businessName: "RENEWAL RECOVERY TEST",
-    mailingAddress: "4061 ERIE ST",
-    mailingAddressCity: "WILLOUGHBY",
-    mailingAddressState: "OH",
-    mailingAddressZip: "44094",
-    
-    firstName: "RENEWAL",
-    lastName: "RECOVERY",
-    dob: "01/01/1980",
-    phone: "444-444-4444",
-    email: "test@e-ins.net"
-  },
-  businessDetailsPage: {
-    yearCreated: "2018",
-    annualSales: "150000",
-    numEmployees: "0"
-  },
-  finalDetailsPage: {
-    producerName: "BOPAgent"
-  },
-  purchasePage: {
-    nameOnCard: "RENEWAL RECOVERY",
-    cardNumber: "4111111111111111",
-    cardExpirationDate: "12/30",
-    cardholderZipCode: "44094"
-  }
-};
+const answers = require("./answersLoader").answers;
 
 /* ==========================
    QUOTE FLOW METHODS
@@ -60,17 +32,17 @@ async function handleCustomerPage(page) {
 
   await page.select(entityTypeSelector, "1");
   await clearInput(page, businessNameSelector).then(async () => {
-    await page.type(businessNameSelector, answers.customerPage.businessName);
+    await page.type(businessNameSelector, answers().customerPage.businessName);
   });
   await clearInput(page, mailingAddressSelector).then(async () => {
-    await page.type(mailingAddressSelector, answers.customerPage.mailingAddress);
+    await page.type(mailingAddressSelector, answers().customerPage.mailingAddress);
   });
   await clearInput(page, mailingAddressCitySelector).then(async () => {
-    await page.type(mailingAddressCitySelector, answers.customerPage.mailingAddressCity);
+    await page.type(mailingAddressCitySelector, answers().customerPage.mailingAddressCity);
   });
-  await page.select(mailingAddressStateSelector, answers.customerPage.mailingAddressState);
+  await page.select(mailingAddressStateSelector, answers().customerPage.mailingAddressState);
   await clearInput(page, mailingAddressZipSelector).then(async () => {
-    await page.type(mailingAddressZipSelector, answers.customerPage.mailingAddressZip);
+    await page.type(mailingAddressZipSelector, answers().customerPage.mailingAddressZip);
   });
 
   await sleep(1000).then(async () => {
@@ -94,19 +66,19 @@ async function handleCustomerPage(page) {
   ]);
 
   await clearInput(page, firstNameSelector).then(async () => {
-    await page.type(firstNameSelector, answers.customerPage.firstName);
+    await page.type(firstNameSelector, answers().customerPage.firstName);
   });
   await clearInput(page, lastNameSelector).then(async () => {
-    await page.type(lastNameSelector, answers.customerPage.lastName);
+    await page.type(lastNameSelector, answers().customerPage.lastName);
   });
   await clearInput(page, dobSelector).then(async () => {
-    await page.type(dobSelector, answers.customerPage.dob);
+    await page.type(dobSelector, answers().customerPage.dob);
   });
   await clearInput(page, phoneSelector).then(async () => {
-    await page.type(phoneSelector, answers.customerPage.phone);
+    await page.type(phoneSelector, answers().customerPage.phone);
   });
   await clearInput(page, emailSelector).then(async () => {
-    await page.type(emailSelector, answers.customerPage.email);
+    await page.type(emailSelector, answers().customerPage.email);
   });
 
   await clickRadio(page, homeAddressChoiceSelector);
@@ -149,13 +121,13 @@ async function handleBusinessDetailsPage(page) {
   ]);
 
   await clearInput(page, yearCreatedSelector).then(async () => {
-    await page.type(yearCreatedSelector, answers.businessDetailsPage.yearCreated);
+    await page.type(yearCreatedSelector, answers().businessDetailsPage.yearCreated);
   });
   await clearInput(page, annualSalesSelector).then(async () => {
-    await page.type(annualSalesSelector, answers.businessDetailsPage.annualSales);
+    await page.type(annualSalesSelector, answers().businessDetailsPage.annualSales);
   });
   await clearInput(page, numEmployeesSelector).then(async () => {
-    await page.type(numEmployeesSelector, answers.businessDetailsPage.numEmployees);
+    await page.type(numEmployeesSelector, answers().businessDetailsPage.numEmployees);
   });
 
   // Business Overview Radio
@@ -196,13 +168,30 @@ async function handlePropertyDetailsPage(page) {
 
 async function handleCoveragePage(page) {
   await page.waitForSelector("#pgRate", { visible: true });
+
+  if (answers().coveragesPage.numPayments > 1) {
+    try {
+      await sleep(2000);
+      const paySelector = `#chkSelect${answers().coveragesPage.numPayments}Pay`;
+      await page.waitForSelector(paySelector, { visible: true });
+      await page.click(paySelector);
+
+      await sleep(1000);
+      const recalculateSelector = 'button[data-analytics-id="RECALCULATE"]';
+      await page.waitForSelector(recalculateSelector, { visible: true, timeout: 2000 });
+      await page.click(recalculateSelector);
+    } catch (error) {
+      console.warn("Pay Schedule being dumb again. Skipping...");
+    }
+  }
+
   await sleep(1000);
   await nextPage(page, "SUMMARY");
 }
 
-async function handleSummaryPage(page, plIndicatorAdd = false) {
+async function handleSummaryPage(page) {
   await page.waitForSelector("#pgSummary", { visible: true });
-  if (plIndicatorAdd) {
+  if (answers().summaryPage.plIndicatorAdd) {
     const plIndicatorSelector = "#uwSetRenewalRecoveryEventFlag";
     await page.waitForSelector(plIndicatorSelector, { visible: true });
     await page.click(plIndicatorSelector);
@@ -219,7 +208,7 @@ async function handleFinalDetailsPage(page) {
 
   await page.waitForSelector(producerNameSelector, { visible: true });
 
-  await page.select(producerNameSelector, answers.finalDetailsPage.producerName);
+  await page.select(producerNameSelector, answers().finalDetailsPage.producerName);
 
   // Customer Section
   const customerContactSelector = "#rdoAllowContactNo";
@@ -239,17 +228,27 @@ async function handlePurchasePage(page) {
   const cardZipSelector = "#cardholderZipCode";
 
   await clearInput(page, nameOnCardSelector).then(async () => {
-    await page.type(nameOnCardSelector, answers.purchasePage.nameOnCard);
+    await page.type(nameOnCardSelector, answers().purchasePage.nameOnCard);
   });
   await clearInput(page, cardNumberSelector).then(async () => {
-    await page.type(cardNumberSelector, answers.purchasePage.cardNumber);
+    await page.type(cardNumberSelector, answers().purchasePage.cardNumber);
   });
   await clearInput(page, cardExpSelector).then(async () => {
-    await page.type(cardExpSelector, answers.purchasePage.cardExpirationDate);
+    await page.type(cardExpSelector, answers().purchasePage.cardExpirationDate);
   });
   await clearInput(page, cardZipSelector).then(async () => {
-    await page.type(cardZipSelector, answers.purchasePage.cardholderZipCode);
+    await page.type(cardZipSelector, answers().purchasePage.cardholderZipCode);
   });
+
+  if (answers().coveragesPage.numPayments > 1) {
+    try {
+      const initialPayAmountSelector = `#initialPaymentAmt`;
+      await page.waitForSelector(initialPayAmountSelector, { visible: true, timeout: 2000 });
+      await page.click(initialPayAmountSelector);
+    } catch (error) {
+      console.warn("Initial payment radio being dumb again. Skipping...");
+    }
+  }
 
   await nextPage(page, "COMPLETE");
 }

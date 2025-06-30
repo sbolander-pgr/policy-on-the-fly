@@ -1,19 +1,32 @@
 const fs = require("fs");
 
+const defaultInputFilePath = "input/input.json";
+
+function defaultOutputFilePath (env, datetime = null) {
+  const dateObj = datetime ? new Date(datetime) : new Date();
+  const isoShort = dateObj.toISOString().slice(0, 10); // "YYYY-MM-DD"
+  return `output/${env}_policies_${isoShort}.json`;
+}
+
 function readJsonFile(filePath) {
   const fileContent = fs.existsSync(filePath)
     ? fs.readFileSync(filePath, "utf-8")
-    : "[]";
+    : "{}";
     
   try {
-    const jsonArray = JSON.parse(fileContent);
-    if (!Array.isArray(jsonArray)) {
-      throw new Error("JSON file does not contain an array.");
-    }
-    return jsonArray;
+    const json = JSON.parse(fileContent);
+    return json;
   } catch (error) {
     throw new Error(`Failed to parse JSON file: ${error.message}`);
   }
+}
+
+function readJsonFileAsArray(filePath) {
+  const fileContent = readJsonFile(filePath);
+  if (!Array.isArray(fileContent)) {
+    return [];
+  }
+  return fileContent;
 }
 
 function writeJsonFile(filePath, jsonArray) {
@@ -25,7 +38,7 @@ function readInput(filePath) {
 }
 
 function writeOutput(filePath, policyIds) {
-  const jsonArray = readJsonFile(filePath);
+  const jsonArray = readJsonFileAsArray(filePath);
   jsonArray.push(...policyIds);
   writeJsonFile(filePath, jsonArray);
 }
@@ -33,4 +46,6 @@ function writeOutput(filePath, policyIds) {
 module.exports = {
   readInput,
   writeOutput,
+  defaultInputFilePath,
+  defaultOutputFilePath
 };

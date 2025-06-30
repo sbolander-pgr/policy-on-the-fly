@@ -31,7 +31,7 @@ async function createNewQuote(page) {
   await handleBusinessDetailsPage(page);
   await handlePropertyDetailsPage(page);
   await handleCoveragePage(page);
-  await handleSummaryPage(page, true);
+  await handleSummaryPage(page);
   await handleFinalDetailsPage(page);
   await handlePurchasePage(page);
   const policyId = await handleSoldQuotePage(page);
