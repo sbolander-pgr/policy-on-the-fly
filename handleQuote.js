@@ -131,12 +131,12 @@ async function handleBusinessDetailsPage(page) {
   });
 
   // Business Overview Radio
-  const performsOutOfStateWorkSelector = "#rdoPerformsOutOfStateWork2";
-  const subcontractorSelector = "#rdoSubcontractor2";
-  const buildContentsSelector = "#rdoBuildContents2";
-  const havePolicySelector = "#rdoHavePolicy2";
-  const hasAutoInsuranceSelector = "#rdoHasAutoInsurance2";
-  const commercialPropSelector = "#rdoCommericalProp2";
+  const performsOutOfStateWorkSelector = answers().businessDetailsPage.performsOutOfStateWork ? "#rdoPerformsOutOfStateWork1" : "#rdoPerformsOutOfStateWork2";
+  const subcontractorSelector = answers().businessDetailsPage.subcontractor ? "#rdoSubcontractor1" : "#rdoSubcontractor2";
+  const buildContentsSelector = answers().businessDetailsPage.buildContents ? "#rdoBuildContents1" : "#rdoBuildContents2";
+  const havePolicySelector = answers().businessDetailsPage.havePolicy ? "#rdoHavePolicy1" : "#rdoHavePolicy2";
+  const hasAutoInsuranceSelector = answers().businessDetailsPage.hasAutoInsurance ? "#rdoHasAutoInsurance1" : "#rdoHasAutoInsurance2";
+  const commercialPropSelector = answers().businessDetailsPage.commercialProp ? "#rdoCommericalProp1" : "#rdoCommericalProp2";
 
   await Promise.all([
     page.waitForSelector(performsOutOfStateWorkSelector, { visible: true }),
@@ -155,6 +155,30 @@ async function handleBusinessDetailsPage(page) {
   await page.click(havePolicySelector);
   await page.click(hasAutoInsuranceSelector);
   await page.click(commercialPropSelector);
+}
+
+async function handleBusinessDetailsUnderwriterOverrides(page) {
+  const reloadForUnderwriterOverride = answers().businessDetailsPage.performsOutOfStateWork ||
+    answers().businessDetailsPage.subcontractor ||
+    answers().businessDetailsPage.commercialProp;
+
+  if (reloadForUnderwriterOverride) {
+    const optionsMenuButtonSelector = "#btnOptionsMenu";
+    await page.waitForSelector(optionsMenuButtonSelector, { visible: true });
+    await page.click(optionsMenuButtonSelector);
+
+    const saveQuoteButtonSelector = 'button[tst-id="saveCurrentQuote"]';
+    await page.waitForSelector(saveQuoteButtonSelector, { visible: true });
+    await page.click(saveQuoteButtonSelector);
+
+    await sleep(1000);
+
+    if (answers().businessDetailsPage.performsOutOfStateWork) {
+      const performsOutOfStateWorkOverrideSelector = '#E155_Checked';
+      await page.waitForSelector(performsOutOfStateWorkOverrideSelector, { visible: true });
+      await page.click(performsOutOfStateWorkOverrideSelector);
+    }
+  }
 
   await sleep(1000).then(async () => {
     await nextPage(page, "PROPERTY DETAILS");
@@ -195,6 +219,11 @@ async function handleSummaryPage(page) {
     const plIndicatorSelector = "#uwSetRenewalRecoveryEventFlag";
     await page.waitForSelector(plIndicatorSelector, { visible: true });
     await page.click(plIndicatorSelector);
+  }
+  if (answers().businessDetailsPage.performsOutOfStateWork) {
+    const underwriterApproveSelector = 'button[tst-id="underwritingApprove"]';
+    await page.waitForSelector(underwriterApproveSelector, { visible: true });
+    await page.click(underwriterApproveSelector);
   }
   await nextPage(page, "FINAL DETAILS");
 }
@@ -268,6 +297,7 @@ async function handleSoldQuotePage(page) {
 module.exports = {
   handleCustomerPage,
   handleBusinessDetailsPage,
+  handleBusinessDetailsUnderwriterOverrides,
   handlePropertyDetailsPage,
   handleCoveragePage,
   handleSummaryPage,

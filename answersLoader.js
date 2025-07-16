@@ -17,6 +17,12 @@ const defaults = {
     yearCreated: "2018",
     annualSales: "150000",
     numEmployees: "0",
+    performsOutOfStateWork: false,
+    subcontractor: false,
+    buildContents: false,
+    havePolicy: false,
+    hasAutoInsurance: false,
+    commercialProp: false,
   },
   coveragesPage: {
     numPayments: 1,

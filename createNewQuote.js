@@ -1,6 +1,7 @@
 const {
   handleCustomerPage,
   handleBusinessDetailsPage,
+  handleBusinessDetailsUnderwriterOverrides,
   handlePropertyDetailsPage,
   handleCoveragePage,
   handleSummaryPage,
@@ -29,6 +30,7 @@ async function createNewQuote(page) {
   await handleStartNewQuoteModal(page);
   await handleCustomerPage(page);
   await handleBusinessDetailsPage(page);
+  await handleBusinessDetailsUnderwriterOverrides(page);
   await handlePropertyDetailsPage(page);
   await handleCoveragePage(page);
   await handleSummaryPage(page);

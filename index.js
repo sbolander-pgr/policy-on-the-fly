@@ -1,5 +1,5 @@
 const puppeteer = require("puppeteer");
-require("dotenv").config({ path: "./env/.env.QA" });
+require("dotenv").config({ path: "./env/.env.DEV" });
 const { login, setUtilityDate, tryGetQuoteId } = require("./bopUtility");
 
 const { createNewQuote } = require("./createNewQuote");
@@ -13,7 +13,7 @@ const { loadAnswers } = require("./answersLoader");
 
 async function startup(systemOverrideDate = null) {
   const browser = await puppeteer.launch({
-    headless: true,
+    headless: false,
     defaultViewport: null,
     args: ["--start-maximized"],
   });
@@ -34,6 +34,7 @@ async function startup(systemOverrideDate = null) {
 async function processExistingQuotes(page, quoteIds, maxErrors = 3) {
   console.log(`Purchasing policies for ${quoteIds.length} existing quotes...`);
 
+  // quoteIds.push(...[]);
   const policies = [];
   const erroredQuotes = [];
   let consecutiveErrorCount = 0;
